@@ -1,0 +1,21 @@
+FROM golang:alpine AS builder
+
+WORKDIR /app
+
+COPY cmd/server/main.go /app
+COPY pkg/. /app/pkg
+COPY go.mod /app
+
+RUN go mod download
+
+RUN CGO_ENABLED=0 GOOS=linux go build -o server
+
+FROM alpine:latest
+
+RUN apk --no-cache add ca-certificates
+
+WORKDIR /app
+
+COPY --from=builder /app/server /app/server
+
+CMD ["/app/server"]
