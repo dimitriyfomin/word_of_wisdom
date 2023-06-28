@@ -1,6 +1,7 @@
-package wisdom
+package hub
 
 import (
+	"context"
 	"math/rand"
 )
 
@@ -17,6 +18,7 @@ var quoteList = []string{
 	"Growing wise means learning what to put your energy into and what to walk away from.",
 }
 
-func GetRandomQuote() string {
-	return quoteList[rand.Intn(len(quoteList))]
+func (h *Api) GetRandomQuote(_ context.Context, _ []byte) ([]byte, error) {
+	quote := quoteList[rand.Intn(len(quoteList))]
+	return []byte(quote), nil
 }

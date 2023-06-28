@@ -1,6 +1,7 @@
 package main
 
 import (
+	"errors"
 	"fmt"
 	"math/rand"
 	"net"
@@ -22,15 +23,13 @@ func main() {
 	}
 	defer conn.Close()
 
-	buffer := make([]byte, 1024)
-	n, err := conn.Read(buffer)
+	resp, err := processCommand(conn, "v1.CHG", nil)
 	if err != nil {
-		fmt.Println("Error reading challenge:", err)
+		fmt.Println("Error sending challenge request command:", err)
 		return
 	}
-	challenge := buffer[:n]
-
-	fmt.Printf("Challenge received: %x\n", challenge)
+	fmt.Printf("Challenge: %x\n", resp)
+	challenge := resp
 
 	startTime := time.Now()
 	token := security.GenerateTokenByChallenge(challenge, difficulty, maxAttempts)
@@ -44,17 +43,47 @@ func main() {
 	fmt.Printf("Solution found: %x\n", token)
 	fmt.Println("Time taken to solve PoW:", endTime.Sub(startTime))
 
-	_, err = conn.Write(token)
+	resp, err = processCommand(conn, "v1.CHGT", token)
 	if err != nil {
-		fmt.Printf("Error sending response: %v\n", err)
+		fmt.Println("Error sending challenge token command:", err)
 		return
 	}
 
-	n, err = conn.Read(buffer)
+	resp, err = processCommand(conn, "v1.QTR", nil)
 	if err != nil {
-		fmt.Printf("Error reading response: %v\n", err)
+		fmt.Println("Error sending random quote:", err)
 		return
 	}
+	fmt.Println("Quote received:", string(resp))
+}
 
-	fmt.Println("Quote received:", strings.TrimSpace(string(buffer[:n])))
+func processCommand(conn net.Conn, command string, payload []byte) ([]byte, error) {
+	var message []byte
+	if payload != nil {
+		message = append([]byte(command+" "), payload...)
+	} else {
+		message = []byte(command)
+	}
+	_, err := conn.Write(message)
+	if err != nil {
+		return nil, err
+	}
+
+	buffer := make([]byte, 1024)
+	n, err := conn.Read(buffer)
+	if err != nil {
+		return nil, err
+	}
+	resp := string(buffer[:n])
+	if strings.HasPrefix(resp, "ERR ") {
+		return nil, errors.New(resp[4:])
+	}
+
+	if strings.HasPrefix(resp, "OK ") {
+		return buffer[3:n], nil
+	}
+	if resp == "OK" {
+		return nil, nil
+	}
+	return nil, errors.New("Unexpected format of response: " + resp)
 }
