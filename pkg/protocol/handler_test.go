@@ -30,19 +30,19 @@ func TestCompareBytes(t *testing.T) {
 }
 
 func TestParseMessageRequest(t *testing.T) {
-	req := ParseMessageRequest([]byte("test"))
+	fullCommandName, req := ParseMessageRequest([]byte("test"))
 	assert.NotNil(t, req)
-	assert.Equal(t, "test", req.FullCommandName)
+	assert.Equal(t, "test", fullCommandName)
 	assert.Nil(t, req.Body)
 
-	req = ParseMessageRequest([]byte("test 000"))
+	fullCommandName, req = ParseMessageRequest([]byte("test 000"))
 	assert.NotNil(t, req)
-	assert.Equal(t, "test", req.FullCommandName)
+	assert.Equal(t, "test", fullCommandName)
 	assert.NotNil(t, req.Body)
 
-	req = ParseMessageRequest([]byte("test 000 000"))
+	fullCommandName, req = ParseMessageRequest([]byte("test 000 000"))
 	assert.NotNil(t, req)
-	assert.Equal(t, "test 000", req.FullCommandName)
+	assert.Equal(t, "test 000", fullCommandName)
 	assert.NotNil(t, req.Body)
 }
 

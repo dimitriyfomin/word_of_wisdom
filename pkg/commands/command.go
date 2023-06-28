@@ -18,13 +18,11 @@ type CommandName struct {
 }
 
 type MessageRequest struct {
-	FullCommandName string
-	Body            []byte
+	Body []byte
 }
 
 type MessageResponse struct {
-	CommandName CommandName
-	Body        []byte
+	Body []byte
 }
 
 func checkNamePart(name string) bool {
@@ -75,7 +73,6 @@ func (cmd Command) Execute(ctx context.Context, req *MessageRequest) (*MessageRe
 	resp, err := cmd.handler(ctx, body)
 
 	return &MessageResponse{
-		CommandName: cmd.CommandName,
-		Body:        resp,
+		Body: resp,
 	}, err
 }

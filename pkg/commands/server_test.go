@@ -29,6 +29,10 @@ func TestServerGetCommand(t *testing.T) {
 	assert.Error(t, err)
 	assert.Nil(t, cmd)
 
+	cmd, err = srv.GetCommand("")
+	assert.Error(t, err)
+	assert.Nil(t, cmd)
+
 	srv.commands = nil
 	cmd, err = srv.GetCommand("v1.test")
 	assert.Error(t, err)

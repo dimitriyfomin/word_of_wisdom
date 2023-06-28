@@ -23,8 +23,8 @@ func HandlePayload(srv CommandStorage, ctx context.Context, payload []byte, inte
 		return NewErrorServerResponse(nil)
 	}
 
-	req := ParseMessageRequest(payload)
-	cmd, err := srv.GetCommand(req.FullCommandName)
+	fullCommandName, req := ParseMessageRequest(payload)
+	cmd, err := srv.GetCommand(fullCommandName)
 	if err != nil || cmd == nil {
 		return NewErrorServerResponse(err)
 	}
@@ -46,7 +46,11 @@ func HandlePayload(srv CommandStorage, ctx context.Context, payload []byte, inte
 }
 
 // Message format: <fullCommand> <payload:optional>
-func ParseMessageRequest(msg []byte) *commands.MessageRequest {
+func ParseMessageRequest(msg []byte) (string, *commands.MessageRequest) {
+	if msg == nil {
+		return "", nil
+	}
+
 	var fullCommandName string
 	var body []byte
 	for ind := range msg {
@@ -58,9 +62,9 @@ func ParseMessageRequest(msg []byte) *commands.MessageRequest {
 	if fullCommandName == "" {
 		fullCommandName = string(msg)
 	}
-	return &commands.MessageRequest{
-		FullCommandName: fullCommandName,
-		Body:            body,
+
+	return fullCommandName, &commands.MessageRequest{
+		Body: body,
 	}
 }
 

@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"io"
 	"math/rand"
 	"net"
 	"time"
@@ -59,7 +60,9 @@ func handleConnection(conn net.Conn, srv *commands.Server, ctx context.Context) 
 	for {
 		buffer := make([]byte, 1024)
 		n, err := conn.Read(buffer)
-		if err != nil {
+		if err == io.EOF {
+			return
+		} else if err != nil {
 			fmt.Println("Error reading request:", err)
 			return
 		}
@@ -78,9 +81,11 @@ func interceptBySecurity(ctx context.Context, req *commands.MessageRequest, info
 	// Require DDoS check
 	if connValues != nil && !connValues.ddosSecureChecked {
 		ignoreCheck := false
-		for _, cmdName := range []string{hub.VerifyChallengeCommand, hub.GetChallengeCommand} {
-			if cmdName == info.CommandName.Name {
-				ignoreCheck = true
+		if info != nil {
+			for _, cmdName := range []string{hub.VerifyChallengeCommand, hub.GetChallengeCommand} {
+				if cmdName == info.CommandName.Name {
+					ignoreCheck = true
+				}
 			}
 		}
 		if !ignoreCheck {
@@ -101,7 +106,7 @@ func interceptBySecurity(ctx context.Context, req *commands.MessageRequest, info
 	}
 
 	// Store challenge after generation
-	if info != nil && info.CommandName.Name == hub.GetChallengeCommand && resp != nil {
+	if info != nil && info.CommandName.Name == hub.GetChallengeCommand && resp != nil && err == nil {
 		connValues.challenge = resp.Body
 	}
 	// DDoS Secure check has been passed
