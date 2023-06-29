@@ -94,7 +94,7 @@ func interceptBySecurity(ctx context.Context, req *commands.MessageRequest, info
 	}
 
 	// Challenge enrichment for context
-	if info != nil && info.CommandName.Name == hub.VerifyChallengeCommand {
+	if info != nil && connValues != nil && info.CommandName.Name == hub.VerifyChallengeCommand {
 		ctx = hub.SetContextChallenge(ctx, connValues.challenge)
 	}
 
@@ -106,11 +106,11 @@ func interceptBySecurity(ctx context.Context, req *commands.MessageRequest, info
 	}
 
 	// Store challenge after generation
-	if info != nil && info.CommandName.Name == hub.GetChallengeCommand && resp != nil && err == nil {
+	if info != nil && connValues != nil && info.CommandName.Name == hub.GetChallengeCommand && resp != nil && err == nil {
 		connValues.challenge = resp.Body
 	}
 	// DDoS Secure check has been passed
-	if info != nil && info.CommandName.Name == hub.VerifyChallengeCommand && err == nil {
+	if info != nil && connValues != nil && info.CommandName.Name == hub.VerifyChallengeCommand && err == nil {
 		connValues.ddosSecureChecked = true
 	}
 
