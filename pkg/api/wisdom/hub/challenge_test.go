@@ -35,10 +35,25 @@ func TestVerifyChallenge(t *testing.T) {
 
 	ctx := context.WithValue(context.Background(), challengeContextKey, challenge)
 	resp, err := api.VerifyChallenge(ctx, token)
-
 	assert.NoError(t, err)
 	assert.Nil(t, resp)
 
 	_, err = api.VerifyChallenge(ctx, invalidToken)
+	assert.Error(t, err)
+
+	ctx = context.WithValue(context.Background(), challengeContextKey, nil)
+	resp, err = api.VerifyChallenge(ctx, nil)
+	assert.Error(t, err)
+
+	ctx = context.WithValue(context.Background(), challengeContextKey, []byte{})
+	resp, err = api.VerifyChallenge(ctx, nil)
+	assert.Error(t, err)
+
+	ctx = context.WithValue(context.Background(), challengeContextKey, nil)
+	resp, err = api.VerifyChallenge(ctx, []byte{})
+	assert.Error(t, err)
+
+	ctx = context.WithValue(context.Background(), challengeContextKey, []byte{})
+	resp, err = api.VerifyChallenge(ctx, []byte{})
 	assert.Error(t, err)
 }
